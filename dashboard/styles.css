@@ -1,0 +1,61 @@
+/* General styling */
+.stApp {
+    background-color: #f8f9fa;
+    font-family: 'Arial', sans-serif;
+}
+h1 {
+    color: #2c3e50;
+    font-weight: bold;
+}
+h3 {
+    color: #34495e;
+}
+/* Style for metrics cards */
+.metric-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    text-align: center;
+    border-left: 5px solid #007bff;
+}
+.metric-card .stMetricLabel {
+    font-size: 18px;
+    color: #2c3e50;
+    font-weight: bold;
+}
+.metric-card .stMetricValue {
+    font-size: 24px;
+    color: #007bff;
+}
+/* Style for filter containers */
+.filter-container {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+/* Style for filter columns */
+.filter-column {
+    padding: 10px;
+}
+/* Style for horizontal line */
+hr {
+    border: 1px solid #e0e0e0;
+    margin: 20px 0;
+}
+/* Style for data table */
+.stDataFrame {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+}
+/* Style for year-wise revenue table */
+.yearly-revenue-table .stDataFrame {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+}

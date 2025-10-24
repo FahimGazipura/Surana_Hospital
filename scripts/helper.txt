@@ -1,0 +1,9 @@
+    columns_to_keep
+    # Numeric columns (added trnvalue if it's numeric)
+    # Integer ID columns
+    # String columns
+    # Date columns
+    # Rename columns
+    # Add year & month info
+    # Keep latest discharge per patient
+    # clean credit company
