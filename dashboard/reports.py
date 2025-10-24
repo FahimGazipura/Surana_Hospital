@@ -2,93 +2,12 @@ import streamlit as st
 import locale
 import plotly.express as px
 # reports/pdf_reports.py
-from reportlab.lib.pagesizes import A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
+# from reportlab.lib.pagesizes import A4
+# from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+# from reportlab.lib import colors
+# from reportlab.lib.styles import getSampleStyleSheet
 import pandas as pd
 
-
-def export_nabl_report_to_pdf(df, file_path="NABL_Report.pdf"):
-    """
-    Generate Age-wise IPD NABL report PDF from cleaned IPD DataFrame.
-    df must have columns: adm_dt, dsch_dt, Age, Sex, patient_expired (Yes/No)
-    """
-    try:
-        # Ensure numeric values are Python int
-        df = df.copy()
-        df['Age'] = df['Age'].apply(lambda x: int(x) if pd.notna(x) else 0)
-
-        # Categorize Age groups
-        def age_group(age):
-            if age < 18:
-                return "Less than 18 years"
-            elif age < 65:
-                return "Less than 65 years"
-            else:
-                return "Greater than equal 65 years"
-
-        df['Age Group'] = df['Age'].apply(age_group)
-
-        # Admission Report
-        adm_df = df.groupby(['Age Group', 'Sex']).size().unstack(fill_value=0)
-        adm_df['Total'] = adm_df.sum(axis=1)
-        adm_df.loc['Total'] = adm_df.sum(numeric_only=True)
-
-        # Discharge Report
-        dsch_df = df[df['dsch_dt'].notna()].groupby(['Age Group', 'Sex']).size().unstack(fill_value=0)
-        dsch_df['Total'] = dsch_df.sum(axis=1)
-        dsch_df.loc['Total'] = dsch_df.sum(numeric_only=True)
-
-        # Death Report
-        death_df = df[df['patient_expired'].str.upper() == 'YES'].groupby(['Age Group', 'Sex']).size().unstack(
-            fill_value=0)
-        death_df['Total'] = death_df.sum(axis=1)
-        death_df.loc['Total'] = death_df.sum(numeric_only=True)
-
-        # PDF setup
-        doc = SimpleDocTemplate(file_path, pagesize=A4)
-        elements = []
-        styles = getSampleStyleSheet()
-
-        # Title
-        elements.append(Paragraph("Age Wise IPD NABL Report", styles['Title']))
-        elements.append(Spacer(1, 12))
-
-        # Function to add table
-        def add_table(df_table, title):
-            elements.append(Paragraph(title, styles['Heading2']))
-            data = [df_table.columns.tolist()] + df_table.reset_index().values.tolist()
-            # Convert all elements to str to avoid float issues
-            data = [[str(cell) for cell in row] for row in data]
-            table = Table(data, hAlign='LEFT')
-            table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
-                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
-            ]))
-            elements.append(table)
-            elements.append(Spacer(1, 12))
-
-        add_table(adm_df, "Age Wise IPD Admission Report")
-        add_table(dsch_df, "Age Wise IPD Discharge Report")
-        add_table(death_df, "Age Wise IPD Death Report")
-
-        # Build PDF
-        doc.build(elements)
-        print(f"✅ NABL Report exported successfully: {file_path}")
-
-    except Exception as e:
-        print(f"❌ Error generating PDF: {e}")
-
-
-# Ensure locale is set for Indian Rupees
-try:
-    locale.setlocale(locale.LC_MONETARY, 'en_IN')
-except locale.Error:
-    locale.setlocale(locale.LC_MONETARY, '')
 
 def display_ip_metrics(filtered_ip_data):
     """

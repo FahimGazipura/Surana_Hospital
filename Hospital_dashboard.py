@@ -5,12 +5,6 @@ import pandas as pd
 import streamlit as st
 from datetime import datetime, timedelta
 from io import BytesIO
-from reportlab.lib.pagesizes import A4
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
-)
 
 # Add parent folder to sys.path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -71,30 +65,32 @@ def generate_agewise_report(df, date_col, month, year, expired_filter=None):
     return summary[["Male", "Female", "Total"]]
 
 def load_css():
-    """Load custom CSS styling with scrollable fixed sidebar, optimized metric cards, and table header wrapping."""
+    """Load custom CSS styling with responsive design, scrollable fixed sidebar, optimized metric cards, and table header wrapping."""
     try:
         with open("dashboard/styles.css") as f:
             css = f.read()
         card_css = """
         .metric-card {
             background-color: #f0f2f6;
-            border-radius: 8px;
-            padding: 12px;
-            margin: 8px 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
             text-align: center;
-            min-height: 100px;
+            border-left: 0.3125rem solid #007bff;
+            min-height: 6rem;
+            width: 100%;
         }
         .metric-card h3 {
             margin: 0;
-            font-size: 1.1em;
+            font-size: clamp(1rem, 1.5vw, 1.1rem);
             color: #333;
         }
         .metric-card .metric-value {
-            font-size: 1.8em;
+            font-size: clamp(1.5rem, 2vw, 1.8rem);
             font-weight: bold;
             color: #007bff;
-            margin: 8px 0;
+            margin: 0.5rem 0;
         }
         /* Scrollable fixed sidebar */
         [data-testid="stSidebar"] {
@@ -105,74 +101,59 @@ def load_css():
             max-height: 100vh !important;
             overflow-y: auto !important;
             z-index: 100;
-            padding: 10px;
+            padding: 0.9375rem;
             box-sizing: border-box;
+            transition: width 0.3s ease;
         }
         [data-testid="stAppViewContainer"] {
             margin-left: 15% !important;
             width: 85% !important;
+            padding: 0 1rem;
+            box-sizing: border-box;
         }
-        /* Table header wrapping and auto-width */
+        /* Table header wrapping and auto-width with sticky headers */
         [data-testid="stTable"] th {
             white-space: normal !important;
             word-wrap: break-word !important;
             max-width: 200px !important;
             min-width: 100px !important;
             width: auto !important;
-            padding: 8px !important;
+            padding: 0.625rem !important;
             line-height: 1.2em !important;
+            font-size: clamp(0.8rem, 1.2vw, 1rem);
+            background-color: #e6f3ff;
+            color: #2c3e50;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            border-bottom: 0.125rem solid #e0e0e0;
         }
         [data-testid="stTable"] td {
             max-width: 200px !important;
             min-width: 100px !important;
             width: auto !important;
-            padding: 8px !important;
+            padding: 0.5rem !important;
+            font-size: clamp(0.7rem, 1vw, 0.875rem);
         }
         [data-testid="stTable"] {
             width: 100% !important;
+            overflow-x: auto;
+            max-height: 350px; /* Adjust to fit within container */
+            overflow-y: auto;
         }
         /* Filter UI spacing */
         .filter-container select {
-            margin-bottom: 5px;
-            font-size: 0.85em;
-            padding: 4px;
+            margin-bottom: 0.5rem;
+            font-size: clamp(0.8rem, 1.2vw, 0.85rem);
+            padding: 0.25rem;
+            width: 100%;
+            box-sizing: border-box;
         }
         """
         st.markdown(f"<style>{css}\n{card_css}</style>", unsafe_allow_html=True)
     except FileNotFoundError:
         st.error("Error: 'styles.css' not found.")
-
-def export_nabl_pdf(month, year, adm_report, dsch_report, death_report):
-    """Generate NABL PDF report for admissions, discharges, and deaths."""
-    buffer = BytesIO()
-    pdf = SimpleDocTemplate(buffer, pagesize=A4)
-    styles = getSampleStyleSheet()
-    elements = []
-    title = f"Age Wise IPD Report for the month of {datetime(year, month, 1).strftime('%B-%Y')}"
-    elements.append(Paragraph(title, styles['Title']))
-    elements.append(Spacer(1, 12))
-
-    def add_table(title, df):
-        elements.append(Paragraph(title, styles['Heading2']))
-        data = [df.reset_index().columns.to_list()] + df.reset_index().values.tolist()
-        t = Table(data)
-        t.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), colors.lightblue),
-            ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
-            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
-            ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
-        ]))
-        elements.append(t)
-        elements.append(Spacer(1, 18))
-
-    add_table("📅 Age Wise IPD Admission Report", adm_report)
-    add_table("🏥 Age Wise IPD Discharge Report", dsch_report)
-    add_table("⚰️ Age Wise IPD Death Report", death_report)
-    pdf.build(elements)
-    buffer.seek(0)
-    return buffer
 
 def main():
     st.set_page_config(layout="wide")
@@ -290,18 +271,6 @@ def main():
             st.markdown("### ⚰️ Age Wise IPD Death Report")
             death_report = generate_agewise_report(ip_df, "dschg_dt", month, year, expired_filter="Yes")
             st.dataframe(death_report)
-            if st.button("📤 Export NABL Report to PDF"):
-                try:
-                    pdf_buffer = export_nabl_pdf(month, year, adm_report, dsch_report, death_report)
-                    st.download_button(
-                        label="⬇️ Download NABL Report PDF",
-                        data=pdf_buffer,
-                        file_name=f"NABL_Report_{datetime(year, month, 1).strftime('%B_%Y')}.pdf",
-                        mime="application/pdf"
-                    )
-                    st.success("✅ PDF generated successfully!")
-                except Exception as e:
-                    st.error(f"Error generating PDF: {e}")
 
     # TAB 4: Dashboard Overview
     with tabs[3]:
@@ -445,6 +414,7 @@ def main():
                 # Doctor-Wise
                 with col_left:
                     with st.container(height=400):
+                        st.markdown('<div class="report-section">', unsafe_allow_html=True)
                         st.subheader("Doctor-Wise Discharge Metrics (Current Period)")
                         doctor_metrics = current_discharges.groupby('DocName').agg({
                             'ip_no': 'nunique',
@@ -475,10 +445,12 @@ def main():
                             hide_index=True,
                             use_container_width=True
                         )
+                        st.markdown('</div>', unsafe_allow_html=True)
 
                 with col_right:
                     if total_discharges < avg_prev_discharges:
                         with st.container(height=400):
+                            st.markdown('<div class="report-section">', unsafe_allow_html=True)
                             st.subheader("Doctor-Wise Discharge Analysis (Current vs Avg of Prev 2 Months)")
                             current_dschg_doctor = current_discharges.groupby('DocName')['ip_no'].nunique().reset_index().rename(columns={'ip_no': 'Current Month Count'})
                             prev_dschg_doctor = prev_dschg_data.groupby('DocName')['ip_no'].nunique().reset_index().rename(columns={'ip_no': 'Previous Month Count'})
@@ -508,10 +480,12 @@ def main():
                                 hide_index=True,
                                 use_container_width=True
                             )
+                            st.markdown('</div>', unsafe_allow_html=True)
 
                 # Referral Name-Wise
                 with col_left:
                     with st.container(height=400):
+                        st.markdown('<div class="report-section">', unsafe_allow_html=True)
                         st.subheader("Referring Name-Wise Discharge Metrics (Current Period)")
                         refname_metrics = current_discharges.groupby('refname').agg({
                             'ip_no': 'nunique',
@@ -542,10 +516,12 @@ def main():
                             hide_index=True,
                             use_container_width=True
                         )
+                        st.markdown('</div>', unsafe_allow_html=True)
 
                 with col_right:
                     if total_discharges < avg_prev_discharges:
                         with st.container(height=400):
+                            st.markdown('<div class="report-section">', unsafe_allow_html=True)
                             st.subheader("Referring Name-Wise Discharge Analysis (Current vs Avg of Prev 2 Months)")
                             current_dschg_refname = current_discharges.groupby('refname')['ip_no'].nunique().reset_index().rename(columns={'ip_no': 'Current Month Count'})
                             prev_dschg_refname = prev_dschg_data.groupby('refname')['ip_no'].nunique().reset_index().rename(columns={'ip_no': 'Previous Month Count'})
@@ -575,10 +551,12 @@ def main():
                                 hide_index=True,
                                 use_container_width=True
                             )
+                            st.markdown('</div>', unsafe_allow_html=True)
 
                 # Specialty-Wise
                 with col_left:
                     with st.container(height=400):
+                        st.markdown('<div class="report-section">', unsafe_allow_html=True)
                         st.subheader("Specialty-Wise Discharge Metrics (Current Period)")
                         specialty_metrics = current_discharges.groupby('consultant_specialty').agg({
                             'ip_no': 'nunique',
@@ -609,10 +587,12 @@ def main():
                             hide_index=True,
                             use_container_width=True
                         )
+                        st.markdown('</div>', unsafe_allow_html=True)
 
                 with col_right:
                     if total_discharges < avg_prev_discharges:
                         with st.container(height=400):
+                            st.markdown('<div class="report-section">', unsafe_allow_html=True)
                             st.subheader("Specialty-Wise Discharge Analysis (Current vs Avg of Prev 2 Months)")
                             current_dschg_specialty = current_discharges.groupby('consultant_specialty')['ip_no'].nunique().reset_index().rename(columns={'ip_no': 'Current Month Count'})
                             prev_dschg_specialty = prev_dschg_data.groupby('consultant_specialty')['ip_no'].nunique().reset_index().rename(columns={'ip_no': 'Previous Month Count'})
@@ -642,10 +622,12 @@ def main():
                                 hide_index=True,
                                 use_container_width=True
                             )
+                            st.markdown('</div>', unsafe_allow_html=True)
 
                 # TPA/Corporate-Wise
                 with col_left:
                     with st.container(height=400):
+                        st.markdown('<div class="report-section">', unsafe_allow_html=True)
                         st.subheader("TPA/Corporate-Wise Discharge Metrics (Current Period)")
                         tpa_corporate_metrics = current_discharges.groupby('TPA/CORPORATE').agg({
                             'ip_no': 'nunique',
@@ -676,10 +658,12 @@ def main():
                             hide_index=True,
                             use_container_width=True
                         )
+                        st.markdown('</div>', unsafe_allow_html=True)
 
                 with col_right:
                     if total_discharges < avg_prev_discharges:
                         with st.container(height=400):
+                            st.markdown('<div class="report-section">', unsafe_allow_html=True)
                             st.subheader("TPA/Corporate-Wise Discharge Analysis (Current vs Avg of Prev 2 Months)")
                             current_dschg_tpa = current_discharges.groupby('TPA/CORPORATE')['ip_no'].nunique().reset_index().rename(columns={'ip_no': 'Current Month Count'})
                             prev_dschg_tpa = prev_dschg_data.groupby('TPA/CORPORATE')['ip_no'].nunique().reset_index().rename(columns={'ip_no': 'Previous Month Count'})
@@ -709,10 +693,12 @@ def main():
                                 hide_index=True,
                                 use_container_width=True
                             )
+                            st.markdown('</div>', unsafe_allow_html=True)
 
                 # Credit Company-Wise
                 with col_left:
                     with st.container(height=400):
+                        st.markdown('<div class="report-section">', unsafe_allow_html=True)
                         st.subheader("Credit Company-Wise Discharge Metrics (Current Period)")
                         credit_company_metrics = current_discharges.groupby('CREDIT COMPANY').agg({
                             'ip_no': 'nunique',
@@ -743,10 +729,12 @@ def main():
                             hide_index=True,
                             use_container_width=True
                         )
+                        st.markdown('</div>', unsafe_allow_html=True)
 
                 with col_right:
                     if total_discharges < avg_prev_discharges:
                         with st.container(height=400):
+                            st.markdown('<div class="report-section">', unsafe_allow_html=True)
                             st.subheader("Credit Company-Wise Discharge Analysis (Current vs Avg of Prev 2 Months)")
                             current_dschg_credit = current_discharges.groupby('CREDIT COMPANY')['ip_no'].nunique().reset_index().rename(columns={'ip_no': 'Current Month Count'})
                             prev_dschg_credit = prev_dschg_data.groupby('CREDIT COMPANY')['ip_no'].nunique().reset_index().rename(columns={'ip_no': 'Previous Month Count'})
@@ -776,6 +764,7 @@ def main():
                                 hide_index=True,
                                 use_container_width=True
                             )
+                            st.markdown('</div>', unsafe_allow_html=True)
 
                 st.markdown("---")
                 display_filtered_ip_data(filtered_ip_data)

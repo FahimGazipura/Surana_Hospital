@@ -2,60 +2,247 @@
 .stApp {
     background-color: #f8f9fa;
     font-family: 'Arial', sans-serif;
+    padding: 0;
+    margin: 0;
+    min-height: 100vh;
 }
+
+/* Headings */
 h1 {
     color: #2c3e50;
     font-weight: bold;
+    font-size: clamp(1.5rem, 2.5vw, 2.5rem); /* Responsive font size */
 }
 h3 {
     color: #34495e;
+    font-size: clamp(1.1rem, 1.8vw, 1.4rem); /* Responsive font size */
 }
+
 /* Style for metrics cards */
 .metric-card {
     background-color: #ffffff;
-    border-radius: 8px;
-    padding: 15px;
-    margin: 10px 0;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
     text-align: center;
-    border-left: 5px solid #007bff;
+    border-left: 0.3125rem solid #007bff;
+    min-height: 6rem;
+    width: 100%;
 }
 .metric-card .stMetricLabel {
-    font-size: 18px;
+    font-size: clamp(0.9rem, 1.5vw, 1.125rem);
     color: #2c3e50;
     font-weight: bold;
 }
 .metric-card .stMetricValue {
-    font-size: 24px;
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
     color: #007bff;
 }
+
 /* Style for filter containers */
 .filter-container {
     background-color: #ffffff;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 0.5rem;
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.1);
+    width: 100%;
 }
+
 /* Style for filter columns */
 .filter-column {
-    padding: 10px;
+    padding: 0.625rem;
 }
+
 /* Style for horizontal line */
 hr {
-    border: 1px solid #e0e0e0;
-    margin: 20px 0;
+    border: 0.0625rem solid #e0e0e0;
+    margin: 1.25rem 0;
 }
+
 /* Style for data table */
 .stDataFrame {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 10px;
+    border: 0.0625rem solid #e0e0e0;
+    border-radius: 0.5rem;
+    padding: 0.625rem;
+    width: 100%;
+    overflow-x: auto; /* Enable horizontal scroll on small screens */
+    max-height: 400px; /* Match container height, adjust as needed */
+    overflow-y: auto; /* Enable vertical scroll */
 }
+
 /* Style for year-wise revenue table */
 .yearly-revenue-table .stDataFrame {
-    border: 1px solid #e0e0e0;
-    border-radius: 8px;
-    padding: 10px;
-    font-size: 14px;
+    border: 0.0625rem solid #e0e0e0;
+    border-radius: 0.5rem;
+    padding: 0.625rem;
+    font-size: clamp(0.75rem, 1vw, 0.875rem);
+    width: 100%;
+    overflow-x: auto;
+    max-height: 400px; /* Match container height, adjust as needed */
+    overflow-y: auto; /* Enable vertical scroll */
+}
+
+/* Report section styling for Tab 4 */
+.report-section {
+    margin-bottom: 1.5625rem; /* Responsive spacing */
+    padding: 0.9375rem;
+    border-left: 0.375rem solid #007bff;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.375rem rgba(0,0,0,0.05);
+    width: 100%;
+}
+
+/* Enhance headers in report sections */
+.report-section h3 {
+    font-size: clamp(1.1rem, 1.8vw, 1.4rem);
+    font-weight: 600;
+    color: #0056b3;
+    margin-bottom: 0.75rem;
+    text-transform: uppercase;
+}
+
+/* Alternate colors for odd/even report sections */
+.report-section:nth-child(odd) {
+    border-left-color: #28a745;
+    background-color: #f8fff8;
+}
+.report-section:nth-child(even) {
+    border-left-color: #dc3545;
+    background-color: #fff5f5;
+}
+
+/* Table styling within report sections with sticky headers */
+.report-section .stDataFrame {
+    background-color: #f9f9f9;
+    border: 0.125rem solid #e0e0e0;
+    max-height: 350px; /* Adjust to fit within container, leaving space for header */
+    overflow-y: auto; /* Enable vertical scroll */
+}
+.report-section .stDataFrame th {
+    background-color: #e6f3ff;
+    color: #2c3e50;
+    font-weight: 600;
+    padding: 0.625rem;
+    font-size: clamp(0.8rem, 1.2vw, 1rem);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    border-bottom: 0.125rem solid #e0e0e0;
+}
+.report-section .stDataFrame td {
+    padding: 0.5rem;
+    color: #34495e;
+    font-size: clamp(0.7rem, 1vw, 0.875rem);
+}
+
+/* Sidebar styling */
+[data-testid="stSidebar"] {
+    background-color: #ffffff;
+    padding: 0.9375rem;
+    width: 15% !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    max-height: 100vh !important;
+    overflow-y: auto !important;
+    z-index: 100;
+    box-sizing: border-box;
+    transition: width 0.3s ease; /* Smooth transition for responsiveness */
+}
+
+/* Main content adjustment */
+[data-testid="stAppViewContainer"] {
+    margin-left: 15% !important;
+    width: 85% !important;
+    padding: 0 1rem;
+    box-sizing: border-box;
+}
+
+/* Media Queries for Responsiveness */
+
+/* Mobile devices (up to 768px) */
+@media (max-width: 768px) {
+    [data-testid="stSidebar"] {
+        width: 100% !important;
+        position: relative !important;
+        max-height: initial !important;
+        margin-bottom: 1.25rem;
+    }
+    [data-testid="stAppViewContainer"] {
+        margin-left: 0 !important;
+        width: 100% !important;
+        padding: 0 0.5rem;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        flex-direction: column;
+    }
+    .stTabs [data-baseweb="tab"] {
+        width: 100%;
+        text-align: center;
+        padding: 0.5rem 0;
+    }
+    .report-section {
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+    }
+    .report-section h3 {
+        font-size: 1.1rem;
+    }
+    .stDataFrame, .yearly-revenue-table .stDataFrame {
+        font-size: 0.75rem;
+        max-height: 300px; /* Adjusted for mobile */
+    }
+    .metric-card {
+        min-height: 4rem;
+        padding: 0.75rem;
+    }
+    .metric-card .stMetricLabel {
+        font-size: 0.9rem;
+    }
+    .metric-card .stMetricValue {
+        font-size: 1.2rem;
+    }
+}
+
+/* Tablets (768px to 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+    [data-testid="stSidebar"] {
+        width: 20% !important;
+    }
+    [data-testid="stAppViewContainer"] {
+        margin-left: 20% !important;
+        width: 80% !important;
+    }
+    .report-section {
+        margin-bottom: 1.25rem;
+        padding: 0.875rem;
+    }
+    .metric-card {
+        min-height: 5rem;
+        padding: 0.875rem;
+    }
+}
+
+/* Large screens (above 1024px) */
+@media (min-width: 1025px) {
+    .report-section {
+        margin-bottom: 1.5625rem;
+        padding: 0.9375rem;
+    }
+    .metric-card {
+        min-height: 6rem;
+        padding: 1rem;
+    }
+}
+
+/* Ensure select elements are touch-friendly */
+.filter-container select {
+    margin-bottom: 0.5rem;
+    font-size: clamp(0.8rem, 1.2vw, 0.85rem);
+    padding: 0.25rem;
+    width: 100%;
+    box-sizing: border-box;
 }
