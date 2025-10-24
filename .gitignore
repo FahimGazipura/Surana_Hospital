@@ -4,3 +4,5 @@ __pycache__/
 *.pyc
 data/
 testing.ipynb
+# secrets and keys
+*.json
