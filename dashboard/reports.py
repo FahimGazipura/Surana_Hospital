@@ -1,13 +1,15 @@
 import streamlit as st
 import locale
 import plotly.express as px
-# reports/pdf_reports.py
-# from reportlab.lib.pagesizes import A4
-# from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-# from reportlab.lib import colors
-# from reportlab.lib.styles import getSampleStyleSheet
 import pandas as pd
 
+# Set locale to Indian English (en_IN) for currency formatting
+try:
+    locale.setlocale(locale.LC_ALL, 'en_IN')  # Set to Indian locale for ₹ symbol
+except locale.Error:
+    # Fallback to a generic locale if en_IN is not available
+    locale.setlocale(locale.LC_ALL, '')  # Use system's default locale
+    st.warning("Locale set to system default. Currency might not display as ₹. Install 'en_IN' locale for full support.")
 
 def display_ip_metrics(filtered_ip_data):
     """
@@ -143,187 +145,4 @@ def display_yearly_ip_count_report(ip_data):
             height=200
         )
         fig.update_traces(line_color='#28a745', marker=dict(size=8))
-        st.plotly_chart(fig, use_container_width=True)
-
-def display_monthly_revenue_report(ip_data):
-    """
-    Display month-wise revenue report with a table on the left and a line chart on the right
-    for filtered ip_data (all filters except dschg_dt) using dis_year and dis_month_name,
-    showing last 5 unique years (numeric) and months ordered January to December.
-    
-    Parameters:
-    - ip_data: Filtered DataFrame (ip_data)
-    """
-    if ip_data is None or ip_data.empty or 'dis_year' not in ip_data.columns or 'dis_month_name' not in ip_data.columns:
-        st.warning("No data available for month-wise revenue report or required columns missing.")
-        return
-
-    # Define month order (January to December)
-    month_order = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ]
-
-    # Get last 5 unique years from ip_data (numeric)
-    unique_years = sorted(ip_data['dis_year'].dropna().astype(int).unique(), reverse=True)
-    last_5_years = unique_years[:5] if len(unique_years) >= 5 else unique_years
-    if not last_5_years:
-        st.warning("No valid dis_year values found in the data.")
-        return
-
-    # Filter for last 5 years
-    ip_data = ip_data[ip_data['dis_year'].isin(last_5_years)]
-
-    if ip_data.empty:
-        st.warning(f"No data available for years: {', '.join(map(str, last_5_years))}")
-        return
-
-    # Group by dis_month_name and dis_year, sum line_revenue
-    monthly_revenue = ip_data.groupby(['dis_month_name', 'dis_year'])['line_revenue'].sum().reset_index()
-
-    if monthly_revenue.empty:
-        st.warning("No data after grouping by dis_month_name and dis_year. Check dis_month_name values.")
-        return
-
-    # Convert dis_year to string for display
-    monthly_revenue['dis_year'] = monthly_revenue['dis_year'].astype(str)
-
-    # Pivot to get dis_year as columns and dis_month_name as rows
-    pivot_table = monthly_revenue.pivot(index='dis_month_name', columns='dis_year', values='line_revenue').fillna(0)
-
-    # Reindex to ensure all months in order, fill missing months with 0
-    pivot_table = pivot_table.reindex(month_order, fill_value=0)
-
-    # Create two columns for table and chart
-    col_table, col_chart = st.columns(2)
-
-    # Table on the left
-    with col_table:
-        st.subheader("Month-Wise Revenue Report")
-        # Format revenue as Indian Rupees
-        formatted_table = pivot_table.copy()
-        for col in formatted_table.columns:
-            formatted_table[col] = formatted_table[col].apply(
-                lambda x: locale.currency(x, grouping=True, symbol=True) if x > 0 else "₹0"
-            )
-        st.dataframe(formatted_table, use_container_width=True, height=450)
-
-    # Line chart on the right
-    with col_chart:
-        st.subheader("Month-Wise Revenue Trend")
-        # Prepare data for line chart (melt pivot table back to long format)
-        chart_data = monthly_revenue.pivot(index='dis_month_name', columns='dis_year', values='line_revenue').reset_index()
-        chart_data = chart_data.melt(id_vars='dis_month_name', var_name='dis_year', value_name='line_revenue')
-        chart_data = chart_data[chart_data['line_revenue'].notnull()]
-        # Ensure month order
-        chart_data['dis_month_name'] = pd.Categorical(chart_data['dis_month_name'], categories=month_order, ordered=True)
-        chart_data = chart_data.sort_values('dis_month_name')
-        fig = px.line(
-            chart_data,
-            x='dis_month_name',
-            y='line_revenue',
-            color='dis_year',
-            markers=True,
-            labels={'dis_month_name': 'Month', 'line_revenue': 'Revenue (₹)', 'dis_year': 'Year'},
-            title=""
-        )
-        fig.update_layout(
-            xaxis_title="Month",
-            yaxis_title="Revenue (₹)",
-            legend_title="Year",
-            margin=dict(l=0, r=0, t=30, b=0),
-            height=450
-        )
-        fig.update_traces(marker=dict(size=8))
-        st.plotly_chart(fig, use_container_width=True)
-
-def display_monthly_ip_count_report(ip_data):
-    """
-    Display month-wise unique IP count report with a table on the left and a line chart on the right
-    for filtered ip_data (all filters except dschg_dt) using dis_year and dis_month_name,
-    showing last 5 unique years (numeric) and months ordered January to December.
-    
-    Parameters:
-    - ip_data: Filtered DataFrame (ip_data)
-    """
-    if ip_data is None or ip_data.empty or 'dis_year' not in ip_data.columns or 'dis_month_name' not in ip_data.columns or 'ip_no' not in ip_data.columns:
-        st.warning("No data available for month-wise IP count report or required columns missing.")
-        return
-
-    # Define month order (January to December)
-    month_order = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ]
-
-    # Get last 5 unique years from ip_data (numeric)
-    unique_years = sorted(ip_data['dis_year'].dropna().astype(int).unique(), reverse=True)
-    last_5_years = unique_years[:5] if len(unique_years) >= 5 else unique_years
-    if not last_5_years:
-        st.warning("No valid dis_year values found in the data.")
-        return
-
-    # Filter for last 5 years
-    ip_data = ip_data[ip_data['dis_year'].isin(last_5_years)]
-
-    if ip_data.empty:
-        st.warning(f"No data available for years: {', '.join(map(str, last_5_years))}")
-        return
-
-    # Group by dis_month_name and dis_year, count unique ip_no
-    monthly_ip_count = ip_data.groupby(['dis_month_name', 'dis_year'])['ip_no'].nunique().reset_index()
-    monthly_ip_count.columns = ['dis_month_name', 'dis_year', 'ip_count']
-
-    if monthly_ip_count.empty:
-        st.warning("No data after grouping by dis_month_name and dis_year. Check dis_month_name values.")
-        return
-
-    # Convert dis_year to string for display
-    monthly_ip_count['dis_year'] = monthly_ip_count['dis_year'].astype(str)
-
-    # Pivot to get dis_year as columns and dis_month_name as rows
-    pivot_table = monthly_ip_count.pivot(index='dis_month_name', columns='dis_year', values='ip_count').fillna(0)
-
-    # Reindex to ensure all months in order, fill missing months with 0
-    pivot_table = pivot_table.reindex(month_order, fill_value=0)
-
-    # Create two columns for table and chart
-    col_table, col_chart = st.columns(2)
-
-    # Table on the left
-    with col_table:
-        st.subheader("Month-Wise IP Count Report")
-        # Format counts as integers
-        formatted_table = pivot_table.copy()
-        for col in formatted_table.columns:
-            formatted_table[col] = formatted_table[col].astype(int)
-        st.dataframe(formatted_table, use_container_width=True, height=450)
-
-    # Line chart on the right
-    with col_chart:
-        st.subheader("Month-Wise IP Count Trend")
-        # Prepare data for line chart (melt pivot table back to long format)
-        chart_data = monthly_ip_count.pivot(index='dis_month_name', columns='dis_year', values='ip_count').reset_index()
-        chart_data = chart_data.melt(id_vars='dis_month_name', var_name='dis_year', value_name='ip_count')
-        chart_data = chart_data[chart_data['ip_count'].notnull()]
-        # Ensure month order
-        chart_data['dis_month_name'] = pd.Categorical(chart_data['dis_month_name'], categories=month_order, ordered=True)
-        chart_data = chart_data.sort_values('dis_month_name')
-        fig = px.line(
-            chart_data,
-            x='dis_month_name',
-            y='ip_count',
-            color='dis_year',
-            markers=True,
-            labels={'dis_month_name': 'Month', 'ip_count': 'Unique IP Count', 'dis_year': 'Year'},
-            title=""
-        )
-        fig.update_layout(
-            xaxis_title="Month",
-            yaxis_title="Unique IP Count",
-            legend_title="Year",
-            margin=dict(l=0, r=0, t=30, b=0),
-            height=450
-        )
-        fig.update_traces(marker=dict(size=8))
         st.plotly_chart(fig, use_container_width=True)
